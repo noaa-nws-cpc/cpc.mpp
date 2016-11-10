@@ -85,7 +85,8 @@ def regress(raw_fcst, stats, method='ensemble', ptiles=list([1, 2, 5, 10, 15, 20
     # ----------------------------------------------------------------------------------------------
     # Calculate correction for over-dispersive model
     #
-    k = np.sqrt(yv / es * (num_fcst_members - 1) / num_fcst_members * (1 / rxy ** 2 - 1))
+    with np.errstate(divide='ignore'):
+        k = np.sqrt(yv / es * (num_fcst_members - 1) / num_fcst_members * (1 / rxy ** 2 - 1))
     k = np.where(k > 1, 1, k)  # keep kn <= 1
     k = np.where(rbest > 1, k, 1)  # set to 1 if rbest not > 1
 
