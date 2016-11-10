@@ -79,8 +79,8 @@ def regress(raw_fcst, stats, method='ensemble', ptiles=list([1, 2, 5, 10, 15, 20
     # ----------------------------------------------------------------------------------------------
     # Calculate fcst anomalies and mean
     #
-    y_anom = raw_fcst.ens - ym
-    y_anom_mean = raw_fcst.ens_mean - ym
+    y_anom = raw_fcst - ym
+    y_anom_mean = np.nanmean(y_anom, axis=0)
 
     # ----------------------------------------------------------------------------------------------
     # Calculate correction for over-dispersive model
