@@ -107,13 +107,3 @@ def regress(raw_fcst, stats, method='ensemble', ptiles=list([1, 2, 5, 10, 15, 20
     ebest = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2 * (1 + k**2 * es/yv)))
     emean = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2))
 
-    a1.astype('float32').tofile('a1.bin')
-    ebest.astype('float32').tofile('ebest.bin')
-    emean.astype('float32').tofile('emean.bin')
-    k.astype('float32').tofile('k.bin')
-    rxy.astype('float32').tofile('rxy.bin')
-    es.astype('float32').tofile('es.bin')
-    yv.astype('float32').tofile('yv.bin')
-    rbest.astype('float32').tofile('rbest.bin')
-    y_anom_mean.astype('float32').tofile('y_anom_mean.bin')
-
