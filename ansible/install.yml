@@ -1,0 +1,30 @@
+
+# Ansible install tasks
+---
+- name: Check that conda is installed
+  command: which {{ miniconda_command }}
+  register: conda_installed
+- fail: msg="conda not installed/defined on target machine..."
+  when: "conda_installed.rc != 0"
+- name: Create several directories
+  file: path={{ app_dir }}/{{ item }} state=directory
+  with_items:
+    - logs
+    - output
+    - work
+- name: Create a conda virtual environment (including dependencies in conda-requirements.txt)
+  command: "{{ miniconda_command }} create --yes -p {{ virtualenv_dir }} --file={{ app_dir }}/conda-requirements.txt python={{ python_version }}"
+  failed_when: "conda_created.rc != 0"
+  register: conda_created
+- name: Install remaining pip requirements (in pip-requirements.txt)
+  pip: >
+    virtualenv={{ virtualenv_dir }}
+    requirements={{ app_dir }}/pip-requirements.txt
+    extra_args={{ extra_pip_args }}
+- name: Install application in the virtual environment
+  pip: >
+    virtualenv={{ virtualenv_dir }}
+    name={{ app_dir }}
+    extra_args='{{ extra_pip_args }} -e'
+...
+

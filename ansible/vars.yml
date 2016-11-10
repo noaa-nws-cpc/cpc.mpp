@@ -1,0 +1,40 @@
+# Ansible global variables
+---
+# --------------------------------------------------------------------------------------------------
+# Set these variables for your app
+#
+# Name of your app (only use letters, numbers, dashes, or underscores)
+app_name: cpc.mpp
+# Directory to contain your app(s)
+app_root: "{{ HOME }}/apps"
+# Git repository containing your app (if public, use HTTPS version)
+git_repo: https://github.com/mikecharles/cpc.mpp
+# Git branch to deploy
+git_branch: master
+# Version of Python to install in the virtual environment
+python_version: 3.5
+# Extra pip arguments to use when installing Python packages with pip - alternatively these can
+# be defined in ~/.pip/pip.conf or requirements.txt
+extra_pip_args:
+# --------------------------------------------------------------------------------------------------
+# These can usually be left alone
+#
+# Ansistrano vars
+
+ansistrano_allow_anonymous_stats: false
+ansistrano_deploy_via: git
+ansistrano_deploy_to: "{{ app_root }}/{{ app_name }}"
+ansistrano_git_repo: "{{ git_repo }}"
+ansistrano_git_branch: "{{ git_branch }}"
+ansistrano_keep_releases: 10
+# $HOME environment variable on the target machine
+HOME: "{{ ansible_env.HOME }}"
+# Directory where your app will be installed on the target machine
+app_dir: "{{ ansistrano_release_path.stdout }}"
+# Directory where the Python virtual environment will be created
+virtualenv_dir: "{{ app_dir }}/venv"
+miniconda_python: 3
+miniconda_prefix: "{{ ansible_env.HOME }}/miniconda"
+miniconda_command: "{{ miniconda_prefix }}/bin/conda"
+
+...

@@ -1,0 +1,21 @@
+# Ansistrano rollback playbook
+---
+  # ------------------------------------------------------------------------------------------------
+  # Hosts to deploy to (set to all if you want to be able to just limit installation to specific
+  # hosts using the `--limit` arg to `ansible-playbook`.
+  #
+  - hosts: all
+    # ----------------------------------------------------------------------------------------------
+    # Files containing additional variables
+    #
+    vars_files:
+      - vars.yml
+    # ----------------------------------------------------------------------------------------------
+    # Ansible roles
+    #
+    # One or more roles may be from Ansible Galaxy (ansible-galaxy install <user.role>)
+    #
+    roles:
+      # Ansistrano rollback role
+      - role: carlosbuenosvinos.ansistrano-rollback
+...
