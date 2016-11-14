@@ -6,10 +6,8 @@ class StatsError(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
-def regress(raw_fcst, stats, method='ensemble', ptiles=list([1, 2, 5, 10, 15, 20,
-                                                             25, 33, 40, 50, 60, 67,
-                                                             75, 80, 85, 90, 95, 98, 99]),
-            ens_size_correction=False):
+def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
+            ptiles=list([1, 2, 5, 10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 80, 85, 90, 95, 98, 99])):
     # ----------------------------------------------------------------------------------------------
     # Check stats dict for all required stats
     #
