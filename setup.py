@@ -16,6 +16,7 @@ with open('CHANGELOG.md') as history_file:
 
 requirements = [
     'cpc.geofiles',
+    'cpc.stats'
 ]
 
 setup(

@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.stats import norm
+from cpc.stats.stats import put_terciles_in_one_array
 
 
 class StatsError(Exception):
@@ -105,3 +107,19 @@ def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
     ebest = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2 * (1 + k**2 * es/yv)))
     emean = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2))
 
+    # ----------------------------------------------------------------------------------------------
+    # Correct each member
+    #
+    norm_ptiles = norm.ppf(np.array(ptiles) / 100)
+    POE_member = np.full(raw_fcst.shape, np.nan)
+    POE_total = np.full((len(norm_ptiles), raw_fcst.shape[1]), np.nan)
+    for p, norm_ptile in enumerate(norm_ptiles):
+        for m in range(raw_fcst.shape[0]):
+            POE_member[m] = 1 - norm.cdf(norm_ptile, a1 * y_anom[m] / np.sqrt(xv[m]),
+                                         ebest / np.sqrt(xv[m]))
+        POE_total[p] = np.nanmean(POE_member, axis=0)
+
+    # ----------------------------------------------------------------------------------------------
+    # Return total POE
+    #
+    return POE_total
