@@ -107,6 +107,9 @@ def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
     a1 = rxy * np.sqrt(xv / yv)
     ebest = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2 * (1 + k**2 * es/yv)))
     emean = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2))
+    # Set lower bound for ebest - if ebest is zero, then the scale parameter in norm.cdf will be
+    # zero, resulting in the cdf being NaN - set to a very small number instead of zero
+    ebest = np.where(ebest == 0, 0.00001, ebest)
 
     # ----------------------------------------------------------------------------------------------
     # Correct each member
