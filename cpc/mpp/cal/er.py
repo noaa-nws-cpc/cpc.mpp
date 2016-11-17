@@ -9,7 +9,8 @@ class StatsError(Exception):
 
 
 def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
-            ptiles=list([1, 2, 5, 10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 80, 85, 90, 95, 98, 99])):
+            ptiles=list([1, 2, 5, 10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 80, 85, 90, 95, 98, 99]),
+            debug=False):
     # ----------------------------------------------------------------------------------------------
     # Check stats dict for all required stats
     #
@@ -118,6 +119,33 @@ def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
             POE_member[m] = 1 - norm.cdf(norm_ptile, a1 * y_anom[m] / np.sqrt(xv[m]),
                                          ebest / np.sqrt(xv[m]))
         POE_total[p] = np.nanmean(POE_member, axis=0)
+
+    # ----------------------------------------------------------------------------------------------
+    # Plot stats for debugging
+    #
+    if debug:
+        from cpc.geogrids import Geogrid
+        from cpc.geoplot import Geomap, Geofield
+
+        geogrid = Geogrid('1deg-global')
+
+        levels = {
+            'a1': np.arange(0.1, 1.3, 0.1),
+            'ebest': np.arange(0.5, 6.5, 0.5),
+            'emean': np.arange(0.5, 7.5, 0.5),
+            'k': np.arange(0.1, 1.1, 0.1),
+            'rxy': np.arange(0.1, 1.1, 0.1),
+            'es': np.arange(3, 28, 3),
+            'yv': np.arange(5, 56, 5),
+            'rbest': np.arange(0, 1.3, 0.1),
+            'y_anom_mean': 'auto',
+        }
+
+        for stat in ['a1', 'ebest', 'emean', 'k', 'rxy', 'es', 'yv', 'rbest', 'y_anom_mean']:
+            geomap = Geomap(domain='global', projection='mercator')
+            geofield = Geofield(locals()[stat], geogrid, levels=levels[stat])
+            geomap.plot(geofield)
+            geomap.save('{}.png'.format(stat), dpi=200)
 
     # ----------------------------------------------------------------------------------------------
     # Return total POE
