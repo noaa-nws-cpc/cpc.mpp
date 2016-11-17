@@ -112,13 +112,14 @@ def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
     # Correct each member
     #
     norm_ptiles = norm.ppf(np.array(ptiles) / 100)
-    POE_member = np.full(raw_fcst.shape, np.nan)
-    POE_total = np.full((len(norm_ptiles), raw_fcst.shape[1]), np.nan)
+    POE_ens_mean = np.full((len(norm_ptiles), raw_fcst.shape[1]), np.nan)
+    POE_ens = np.full((len(norm_ptiles), raw_fcst.shape[0], raw_fcst.shape[1]), np.nan)
     for p, norm_ptile in enumerate(norm_ptiles):
         for m in range(raw_fcst.shape[0]):
-            POE_member[m] = 1 - norm.cdf(norm_ptile, a1 * y_anom[m] / np.sqrt(xv[m]),
-                                         ebest / np.sqrt(xv[m]))
-        POE_total[p] = np.nanmean(POE_member, axis=0)
+            with np.errstate(divide='ignore'):
+                POE_ens[p, m] = 1 - norm.cdf(norm_ptile, a1 * y_anom[m] / np.sqrt(xv),
+                                             ebest / np.sqrt(xv))
+    POE_ens_mean = np.nanmean(POE_ens, axis=1)
 
     # ----------------------------------------------------------------------------------------------
     # Plot stats for debugging
@@ -150,4 +151,4 @@ def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
     # ----------------------------------------------------------------------------------------------
     # Return total POE
     #
-    return POE_total
+    return POE_ens_mean
