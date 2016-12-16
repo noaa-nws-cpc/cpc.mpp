@@ -62,8 +62,7 @@ docs:
 	rm -rf docs/api/cpc.mpp
 
 release: clean
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
+	python setup.py sdist bdist_wheel upload
 
 dist: clean
 	python setup.py sdist
