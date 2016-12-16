@@ -1,11 +1,18 @@
 import numpy as np
 from scipy.stats import norm
-from cpc.stats.stats import put_terciles_in_one_array
+from scipy.special import erf
 
 
 class StatsError(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
+
+
+def normcdf(x, mu, sigma):
+    z = (x - mu) / sigma
+    # z = np.where(np.isnan(z), 0, z)
+    p = 0.5 * (1 + erf(z / np.sqrt(2)))
+    return p
 
 
 def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
@@ -119,9 +126,9 @@ def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
     POE_ens = np.full((len(norm_ptiles), raw_fcst.shape[0], raw_fcst.shape[1]), np.nan)
     for p, norm_ptile in enumerate(norm_ptiles):
         for m in range(raw_fcst.shape[0]):
-                POE_ens[p, m] = 1 - norm.cdf(norm_ptile, a1 * y_anom[m] / np.sqrt(xv),
-                                             ebest / np.sqrt(xv))
             with np.errstate(divide='ignore', invalid='ignore'):
+                POE_ens[p, m] = 1 - normcdf(norm_ptile, a1 * y_anom[m] / np.sqrt(xv),
+                                            ebest / np.sqrt(xv))
     POE_ens_mean = np.nanmean(POE_ens, axis=1)
 
     # ----------------------------------------------------------------------------------------------
