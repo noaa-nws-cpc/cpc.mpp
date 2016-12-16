@@ -17,7 +17,7 @@ def normcdf(x, mu, sigma):
 
 def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
             ptiles=list([1, 2, 5, 10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 80, 85, 90, 95, 98, 99]),
-            debug=False):
+            debug=False, variable='tmean'):
     # ----------------------------------------------------------------------------------------------
     # Check stats dict for all required stats
     #
@@ -141,20 +141,37 @@ def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
         geogrid = Geogrid('1deg-global')
 
         levels = {
-            'a1': np.arange(0.1, 1.3, 0.1),
-            'ebest': np.arange(0.5, 6.5, 0.5),
-            'emean': np.arange(0.5, 7.5, 0.5),
-            'k': np.arange(0.1, 1.1, 0.1),
-            'rxy': np.arange(0.1, 1.1, 0.1),
-            'es': np.arange(3, 28, 3),
-            'yv': np.arange(5, 56, 5),
-            'rbest': np.arange(0, 1.3, 0.1),
-            'y_anom_mean': 'auto',
+            'tmean': {
+                'a1': np.arange(0.1, 1.3, 0.1),
+                'ebest': np.arange(0.5, 6.5, 0.5),
+                'emean': np.arange(0.5, 7.5, 0.5),
+                'k': np.arange(0.1, 1.1, 0.1),
+                'rxy': np.arange(0.1, 1.1, 0.1),
+                'es': np.arange(3, 28, 3),
+                'yv': np.arange(5, 56, 5),
+                'xv': np.arange(5, 56, 5),
+                'rbest': np.arange(0, 1.3, 0.1),
+                'y_anom_mean': 'auto',
+                'y_anom_single': np.arange(-10, 16, 1),
+            },
+            'precip': {
+                'a1': np.arange(0.1, 1.3, 0.1),
+                'ebest': np.arange(0.5, 3, 0.2),
+                'emean': np.arange(0.5, 3, 0.2),
+                'k': np.arange(0.1, 1.1, 0.1),
+                'rxy': np.arange(0.1, 1.1, 0.1),
+                'es': np.arange(1, 11, 1),
+                'yv': np.arange(1, 11, 1),
+                'xv': np.arange(1, 11, 1),
+                'rbest': np.arange(0, 1.3, 0.1),
+                'y_anom_mean': 'auto',
+                'y_anom_single': 'auto',
+            }
         }
 
-        for stat in ['a1', 'ebest', 'emean', 'k', 'rxy', 'es', 'yv', 'rbest', 'y_anom_mean']:
-            geomap = Geomap(domain='global', projection='mercator')
-            geofield = Geofield(locals()[stat], geogrid, levels=levels[stat])
+        for stat in ['a1', 'ebest', 'emean', 'k', 'rxy', 'es', 'yv', 'rbest', 'xv']:
+            geomap = Geomap()
+            geofield = Geofield(locals()[stat], geogrid, levels=levels[variable][stat])
             geomap.plot(geofield)
             geomap.save('{}.png'.format(stat), dpi=200)
 
