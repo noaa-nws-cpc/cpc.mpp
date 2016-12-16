@@ -86,7 +86,7 @@ def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
     # ----------------------------------------------------------------------------------------------
     # Calculate correction for over-dispersive model
     #
-    with np.errstate(divide='ignore'):
+    with np.errstate(divide='ignore', invalid='ignore'):
         k = np.sqrt(yv / es * (num_fcst_members - 1) / num_fcst_members * (1 / rxy ** 2 - 1))
     k = np.where(k > 1, 1, k)  # keep kn <= 1
     k = np.where(rbest > 1, k, 1)  # set to 1 if rbest not > 1
@@ -119,9 +119,9 @@ def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
     POE_ens = np.full((len(norm_ptiles), raw_fcst.shape[0], raw_fcst.shape[1]), np.nan)
     for p, norm_ptile in enumerate(norm_ptiles):
         for m in range(raw_fcst.shape[0]):
-            with np.errstate(divide='ignore'):
                 POE_ens[p, m] = 1 - norm.cdf(norm_ptile, a1 * y_anom[m] / np.sqrt(xv),
                                              ebest / np.sqrt(xv))
+            with np.errstate(divide='ignore', invalid='ignore'):
     POE_ens_mean = np.nanmean(POE_ens, axis=1)
 
     # ----------------------------------------------------------------------------------------------
