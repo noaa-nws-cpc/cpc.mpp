@@ -15,6 +15,8 @@ with open('CHANGELOG.md') as history_file:
     history = history_file.read()
 
 requirements = [
+    'scipy',
+    'numpy',
     'cpc.geofiles',
     'cpc.stats'
 ]
