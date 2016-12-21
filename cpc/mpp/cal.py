@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.stats import norm
-from scipy.special import erf
 
 
 class StatsError(Exception):
@@ -8,14 +7,7 @@ class StatsError(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
-# def normcdf(x, mu, sigma):
-#     z = (x - mu) / sigma
-#     # z = np.where(np.isnan(z), 0, z)
-#     p = 0.5 * (1 + erf(z / np.sqrt(2)))
-#     return p
-
-
-def regress(raw_fcst, stats, method='ensemble', ens_size_correction=False,
+def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=False,
             ptiles=list([1, 2, 5, 10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 80, 85, 90, 95, 98, 99]),
             debug=False, variable='tmean'):
     # ----------------------------------------------------------------------------------------------
