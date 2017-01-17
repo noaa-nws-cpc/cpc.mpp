@@ -56,6 +56,12 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     cov = np.where(cov > cov_max, cov_max, cov)
 
     # ----------------------------------------------------------------------------------------------
+    # Adjust ym to look more like the 30-year climo
+    #
+    if 'adjust_model_climo' in stats:
+        ym += stats['climo_mean'] - xm
+
+    # ----------------------------------------------------------------------------------------------
     # Calculate correlation of obs and ens mean
     #
     rxy = cov / np.sqrt(xv * yv)
