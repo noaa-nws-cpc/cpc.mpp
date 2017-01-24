@@ -168,10 +168,10 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
         }
 
         for stat in ['a1', 'ebest', 'emean', 'k', 'rxy', 'es', 'yv', 'rbest', 'xv']:
-            geomap = Geomap()
-            geofield = Geofield(locals()[stat], geogrid, levels=levels[variable][stat])
-            geomap.plot(geofield)
-            geomap.save('{}.png'.format(stat), dpi=200)
+            with Geomap() as geomap:
+                geofield = Geofield(locals()[stat], geogrid, levels=levels[variable][stat])
+                geomap.plot(geofield)
+                geomap.save('{}.png'.format(stat), dpi=200)
 
     # ----------------------------------------------------------------------------------------------
     # Return total POE
