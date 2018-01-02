@@ -104,7 +104,7 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     # ----------------------------------------------------------------------------------------------
     # Make adjustments for cases where correlations are low (in this case, use climo)
     #
-    rxy = np.where(rxy < rxy_min, 0, rxy)
+    rxy = np.where(rxy < rxy_min, rxy_min, rxy)
 
     # ----------------------------------------------------------------------------------------------
     # Calculate regression coefficient and error of best member
