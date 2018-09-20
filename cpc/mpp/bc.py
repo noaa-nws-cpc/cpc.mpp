@@ -178,7 +178,9 @@ def cdf_correction(past_fcst_data, past_obs_data, curr_fcst_data, quantiles,
 def bias_correction(past_fcst_data, past_obs_data, curr_fcst_data, weights=None):
 
     # Calculate past bias
-    bias = np.average(past_fcst_data_mean - past_obs_data, axis=0, weights=weights)
+    bias = np.average(
+        np.ma.masked_invalid(past_fcst_data) - np.ma.masked_invalid(past_obs_data), axis=0, weights=weights
+    )
 
     # Correct current fcst, given the past bias
     corrected_curr_fcst_data = curr_fcst_data - bias
