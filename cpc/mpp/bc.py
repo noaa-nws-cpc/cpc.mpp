@@ -177,9 +177,6 @@ def cdf_correction(past_fcst_data, past_obs_data, curr_fcst_data, quantiles,
 
 def bias_correction(past_fcst_data, past_obs_data, curr_fcst_data, weights=None):
 
-    # Calculate past ensemble mean fcst
-    past_fcst_data_mean = np.nanmean(past_fcst_data, axis=1)
-
     # Calculate past bias
     bias = np.average(past_fcst_data_mean - past_obs_data, axis=0, weights=weights)
 
