@@ -1,5 +1,8 @@
 import numpy as np
 from scipy.stats import norm
+import cpc.geogrids
+import matplotlib.pyplot as plt
+import xarray as xr
 
 
 class StatsError(Exception):
@@ -8,8 +11,8 @@ class StatsError(Exception):
 
 
 def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=False,
-            ptiles=list([1, 2, 5, 10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 80, 85, 90, 95, 98, 99]),
-            debug=False, variable='tmean'):
+                        ptiles=list([1, 2, 5, 10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 80, 85, 90, 95, 98, 99]),
+                        debug=False, variable='tmean', debug_chart_latlon=None):
     # ----------------------------------------------------------------------------------------------
     # Check stats dict for all required stats
     #
@@ -174,6 +177,43 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
                 geomap.save('{}.png'.format(stat), dpi=200)
 
     # ----------------------------------------------------------------------------------------------
+    # Plot regression at a specific grid point for debugging
+    #
+    if debug_chart_latlon:
+        #
+        #
+        debug_chart_latlon = (0, 0)
+        #
+        #
+        lat = debug_chart_latlon[0]
+        lon = debug_chart_latlon[1] if debug_chart_latlon[1] >= 0 else 360 + debug_chart_latlon[1]
+        # TODO: Make these dimensions (51, 181, 360) function parameters
+        data = xr.DataArray(raw_fcst.reshape(51, 181, 360), dims=['member', 'lat', 'lon'],
+                            coords={'member': list(range(51)),
+                                    'lat': cpc.geogrids.Geogrid('1deg-global').lats,
+                                    'lon': cpc.geogrids.Geogrid('1deg-global').lons})
+        fig, ax = plt.subplots()
+        ax.grid(True)
+        ax.set_title('TEST')
+        ax.plot(np.cumsum(data.loc[dict(lat=lat, lon=lon)]), data.member / (len(data.member) - 1))
+        plt.savefig('test.png', dpi=200)
+        print('HI')
+
+
+    # ----------------------------------------------------------------------------------------------
     # Return total POE
     #
     return POE_ens_mean
+
+
+if __name__ == '__main__':
+    import pickle
+
+    with open('/export/cpc-lw-mcharles/mcharles/pycharm-deployments/mpp-driver/mpp_driver/data.pkl', 'rb') as file:
+        raw_fcst, stats = pickle.load(file)
+
+    ensemble_regression(raw_fcst, stats, debug=True, variable='precip',
+                        debug_chart_latlon=(32, -96))
+
+
+    pass
