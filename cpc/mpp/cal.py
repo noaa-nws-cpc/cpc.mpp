@@ -6,7 +6,7 @@ from scipy.stats import norm
 import cpc.geogrids
 
 # This application
-from .plot_debug_charts import plot_debug_charts
+from .plot_poe_charts import plot_debug_poe
 
 
 class StatsError(Exception):
@@ -16,7 +16,7 @@ class StatsError(Exception):
 
 def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=False,
                         ptiles=list([1, 2, 5, 10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 80, 85, 90, 95, 98, 99]),
-                        debug=False, variable='tmean', debug_chart_latlon=None, climo=None):
+                        debug=False, variable='tmean', debug_poe_latlon=None, climo=None):
     # ----------------------------------------------------------------------------------------------
     # Check stats dict for all required stats
     #
@@ -180,8 +180,9 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
                 geomap.plot(geofield)
                 geomap.save('{}.png'.format(stat), dpi=200)
 
-    if debug_chart_latlon:
-        plot_debug_charts(raw_fcst, POE_ens_mean, debug_chart_latlon, geogrid, climo=climo)
+    if debug_poe_latlon:
+        plot_debug_poe(raw_fcst, POE_ens_mean, debug_poe_latlon, geogrid, climo=climo,
+                       var_info={'name': variable})
 
 
     # ----------------------------------------------------------------------------------------------
