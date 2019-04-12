@@ -30,8 +30,9 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     # ----------------------------------------------------------------------------------------------
     # Set some config options
     #
-    xv_min = 0.1  # min xv allowed
+    xv_min = 0.1    # min xv allowed
     rxy_min = 0.05  # min rxy allowed
+    rxy_max = 0.90  # max rxy allowed
 
     # ----------------------------------------------------------------------------------------------
     # Extract fields from stats dict
@@ -72,6 +73,9 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     # Calculate correlation of obs and ens mean
     #
     rxy = cov / np.sqrt(xv * yv)
+    # Limit values of rxy
+    rxy_max
+    rxy = np.where(rxy > rxy_max, rxy_max, rxy)
 
     # ----------------------------------------------------------------------------------------------
     # Correct stats, compensating for the difference between the number of members used to
