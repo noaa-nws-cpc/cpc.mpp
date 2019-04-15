@@ -60,14 +60,3 @@ def plot_debug_poe(raw_fcst, cal_fcst, latlon, geogrid=None, ptiles=None, climo=
 
     # plt.tight_layout()
     plt.savefig('cal-poe.png', dpi=300)
-
-
-if __name__ == '__main__':
-    import pickle
-
-    with open('/export/cpc-lw-mcharles/mcharles/pycharm-deployments/mpp-driver/mpp_driver/data.pkl', 'rb') as file:
-        raw_fcst, cal_fcst, debug_poe_latlon, geogrid, climo = pickle.load(file)
-        debug_poe_latlon = tuple([float(val) for val in debug_poe_latlon])
-
-    plot_debug_poe(raw_fcst, cal_fcst, debug_poe_latlon, geogrid=geogrid, climo=climo,
-                   var_info={'name': 'precip'})
