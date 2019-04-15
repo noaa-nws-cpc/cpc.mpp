@@ -22,7 +22,7 @@ def plot_debug_poe(raw_fcst, cal_fcst, latlon, geogrid=None, ptiles=None, climo=
 
     raw_fcst_da = xr.DataArray(raw_fcst.reshape(num_members, num_lats, num_lons),
                                dims=['member', 'lat', 'lon'],
-                               coords={'member': list(range(51)), 'lat': geogrid.lats,
+                               coords={'member': list(range(num_members)), 'lat': geogrid.lats,
                                        'lon': geogrid.lons})
     cal_fcst_da = xr.DataArray(cal_fcst.reshape(len(ptiles), num_lats, num_lons),
                                dims=['ptile', 'lat', 'lon'],

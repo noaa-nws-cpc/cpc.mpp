@@ -74,7 +74,6 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     #
     rxy = cov / np.sqrt(xv * yv)
     # Limit values of rxy
-    rxy_max
     rxy = np.where(rxy > rxy_max, rxy_max, rxy)
 
     # ----------------------------------------------------------------------------------------------

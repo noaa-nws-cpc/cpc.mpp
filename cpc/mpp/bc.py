@@ -176,7 +176,6 @@ def cdf_correction(past_fcst_data, past_obs_data, curr_fcst_data, quantiles,
 
 
 def bias_correction(past_fcst_data, past_obs_data, curr_fcst_data, weights=None):
-
     # If past_fcst_data is 1-d, add a 2nd dimension, since np.average() below expects it to be 2-d. It would be 2-d
     # if correction_type was set to st-bc (grid points x days)
     if past_fcst_data.ndim == 1:
