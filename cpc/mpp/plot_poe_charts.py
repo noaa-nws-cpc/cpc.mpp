@@ -35,7 +35,9 @@ def plot_debug_poe(raw_fcst, cal_fcst, latlon, geogrid=None, ptiles=None, climo=
     fig, ax = plt.subplots()
     ax.grid(True)
     ax.set_title(f"{var_info['name'].capitalize()} POE Forecast at ({plot_lat}N, {plot_lon}E)")
-    ax.plot(np.exp(np.flip(np.sort(raw_fcst_da.loc[dict(lat=plot_lat, lon=plot_lon)])),),
+    if var_info['name'] == 'precip':
+        raw_fcst = np.exp(raw_fcst)
+    ax.plot(np.flip(np.sort(raw_fcst_da.loc[dict(lat=plot_lat, lon=plot_lon)])),
             raw_fcst_da.member / (len(raw_fcst_da.member) - 1),
             label='Raw fcst')
     ax.set_xlabel(f"{var_info['name']}")
