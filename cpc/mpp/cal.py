@@ -148,7 +148,7 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
 
         geogrid = Geogrid('1deg-global')
 
-        levels = {
+        levels_dict = {
             'tmean': {
                 'a1': np.arange(0.1, 1.3, 0.1),
                 'ebest': np.arange(0.5, 6.5, 0.5),
@@ -178,8 +178,12 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
         }
 
         for stat in ['a1', 'ebest', 'emean', 'k', 'rxy', 'es', 'yv', 'rbest', 'xv', 'y_anom_mean']:
+            try:
+                levels = levels_dict[variable][stat]
+            except KeyError:
+                levels = 'auto'
             with Geomap() as geomap:
-                geofield = Geofield(locals()[stat], geogrid, levels=levels[variable][stat])
+                geofield = Geofield(locals()[stat], geogrid, levels=levels)
                 geomap.plot(geofield)
                 geomap.save('{}.png'.format(stat), dpi=200)
 
