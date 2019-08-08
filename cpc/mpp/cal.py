@@ -1,12 +1,17 @@
+# Built-in
+from typing import Union, Optional
+
 # Third-party
 import numpy as np
 from scipy.stats import norm
+import xarray as xr
 
 # CPC
 import cpc.geogrids
 
 # This application
 from .plot_poe_charts import plot_debug_poe
+import mpp_driver.data.common
 
 
 class StatsError(Exception):
@@ -14,18 +19,33 @@ class StatsError(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
-def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=False,
-                        ptiles=list([1, 2, 5, 10, 15, 20, 25, 33, 40, 50, 60, 67, 75, 80, 85, 90, 95, 98, 99]),
-                        debug=False, variable='tmean', debug_poe_latlon=None, climo=None):
+def ensemble_regression(raw_fcst: Union[xr.Dataset, xr.DataArray],
+                        stats: Union[xr.Dataset, xr.DataArray], method='ensemble',
+                        ens_size_correction=False, ptiles=None, debug=False, variable=None,
+                        debug_poe_latlon=None, climo=None, num_years=None,
+                        num_stats_members=None, num_fcst_members=None):
     # ----------------------------------------------------------------------------------------------
-    # Check stats dict for all required stats
+    # Check parameters
     #
-    required_stats = ['cov', 'es', 'xm', 'xv', 'ym', 'yv', 'num_stats_members',
-                      'num_fcst_members', 'num_years']
-    for required_stat in required_stats:
-        if required_stat not in stats.keys():
-            raise StatsError('Stat {} not found in stats. Required stats are: {}'.format(
-                required_stat, required_stats))
+    # Check for required parameters
+    for arg in ['ptiles', 'variable', 'num_years', 'num_stats_members', 'num_fcst_members']:
+        if locals()[arg] is None:
+            raise ValueError(f'{arg} is a required argument')
+    # Make sure raw_fcst (stats) is an xarray.DataArray (xarray.Dataset) without a date (model)
+    # dimension
+    raw_fcst = mpp_driver.data.common.to_dataarray(raw_fcst).drop('model').squeeze()
+    stats = mpp_driver.data.common.to_dataset(stats).drop('date').squeeze()
+    # Make sure the forecast only contains a single model
+    try:
+        if len(raw_fcst.model) > 1:
+            raise ValueError(f"The forecast data contains {len(raw_fcst.model)} models, ensemble "
+                             f"regression can only be applied to a single mdoel.")
+    except AttributeError:
+        pass
+    # Make sure the stats data contains all required stats
+    required_stats = {'cov', 'es', 'xm', 'xv', 'ym', 'yv'}
+    if set(list(stats.data_vars)) != required_stats:
+        raise StatsError(f'Some stats are missing, required stats are: {required_stats}')
 
     # ----------------------------------------------------------------------------------------------
     # Set some config options
@@ -43,25 +63,22 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     xv = stats['xv']
     ym = stats['ym']
     yv = stats['yv']
-    num_stats_members = stats['num_stats_members']
-    num_fcst_members = stats['num_fcst_members']
-    num_years = stats['num_years']
 
     # ----------------------------------------------------------------------------------------------
     # Set bounds for some stats
     #
     # Set lower bound for xv
-    xv = np.where(xv < xv_min, xv_min, xv)
+    xv = xv.where(xv > xv_min, xv_min)
     # Set lower and upper bounds for yv
     yv_min = 0.1 * xv  # min yv allowed
-    yv = np.where(yv < yv_min, yv_min, yv)
+    yv = yv.where(yv > yv_min, yv_min)
     yv_max = xv  # signal cannot be greater than obs variance
-    yv = np.where(yv > yv_max, yv_max, yv)
+    yv = yv.where(yv < yv_max, yv_max)
     # Set lower and upper bounds for cov
     cov_min = 0  # ignore negative covariances and corelations
-    cov = np.where(cov < cov_min, cov_min, cov)
+    cov = cov.where(cov > cov_min, cov_min)
     cov_max = xv  # Max covariance equal to variance of obs
-    cov = np.where(cov > cov_max, cov_max, cov)
+    cov = cov.where(cov < cov_max, cov_max)
 
     # ----------------------------------------------------------------------------------------------
     # Adjust ym to look more like the 30-year climo
@@ -74,7 +91,7 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     #
     rxy = cov / np.sqrt(xv * yv)
     # Limit values of rxy
-    rxy = np.where(rxy > rxy_max, rxy_max, rxy)
+    rxy = rxy.where(rxy < rxy_max, rxy_max)
 
     # ----------------------------------------------------------------------------------------------
     # Correct stats, compensating for the difference between the number of members used to
@@ -96,15 +113,15 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     # Calculate fcst anomalies and mean
     #
     y_anom = raw_fcst - ym
-    y_anom_mean = np.nanmean(y_anom, axis=0)
+    y_anom_mean = y_anom.mean(dim='member')
 
     # ----------------------------------------------------------------------------------------------
     # Calculate correction for over-dispersive model
     #
     with np.errstate(divide='ignore', invalid='ignore'):
         k = np.sqrt(yv / es * (num_fcst_members - 1) / num_fcst_members * (1 / rxy ** 2 - 1))
-    k = np.where(k > 1, 1, k)  # keep kn <= 1
-    k = np.where(rbest > 1, k, 1)  # set to 1 if rbest not > 1
+    k = k.where(k <= 1, 1)  # keep kn <= 1
+    k = k.where(rbest <= 1, 1)  # set to 1 if rbest not > 1
 
     # ----------------------------------------------------------------------------------------------
     # Adjust fcst members to correct for over-dispersion
@@ -114,7 +131,7 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     # ----------------------------------------------------------------------------------------------
     # Make adjustments for cases where correlations are low (in this case, use climo)
     #
-    rxy = np.where(rxy < rxy_min, rxy_min, rxy)
+    rxy = rxy.where(rxy >= rxy_min, rxy_min)
 
     # ----------------------------------------------------------------------------------------------
     # Calculate regression coefficient and error of best member
@@ -124,20 +141,18 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     emean = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2))
     # Set lower bound for ebest - if ebest is zero, then the scale parameter in norm.cdf will be
     # zero, resulting in the cdf being NaN - set to a very small number instead of zero
-    ebest = np.where(ebest == 0, 0.00001, ebest)
+    ebest = ebest.where(ebest > 0, 0.00001)
 
     # ----------------------------------------------------------------------------------------------
     # Correct each member
     #
     norm_ptiles = norm.ppf(np.array(ptiles) / 100)
-    POE_ens_mean = np.full((len(norm_ptiles), raw_fcst.shape[1]), np.nan)
-    POE_ens = np.full((len(norm_ptiles), raw_fcst.shape[0], raw_fcst.shape[1]), np.nan)
-    for p, norm_ptile in enumerate(norm_ptiles):
-        for m in range(raw_fcst.shape[0]):
-            with np.errstate(divide='ignore', invalid='ignore'):
-                POE_ens[p, m] = 1 - norm.cdf(norm_ptile, a1 * y_anom[m] / np.sqrt(xv),
-                                             ebest / np.sqrt(xv))
-    POE_ens_mean = np.nanmean(POE_ens, axis=1)
+    poe_ens = y_anom.expand_dims({'norm_ptile': norm_ptiles}).copy(deep=True) * np.nan
+    for norm_ptile in norm_ptiles:
+        poe_ens.loc[dict(norm_ptile=norm_ptile)] = xr.apply_ufunc(norm.cdf, norm_ptile,
+                                                                  a1 * y_anom / np.sqrt(xv),
+                                                                  ebest / np.sqrt(xv)).data
+    poe_ens_mean = poe_ens.mean(dim='member')
 
     # ----------------------------------------------------------------------------------------------
     # Plot stats for debugging
@@ -195,4 +210,4 @@ def ensemble_regression(raw_fcst, stats, method='ensemble', ens_size_correction=
     # ----------------------------------------------------------------------------------------------
     # Return total POE
     #
-    return POE_ens_mean
+    return poe_ens_mean
