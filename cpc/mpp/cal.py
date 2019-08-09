@@ -5,9 +5,7 @@ from typing import Union, Optional
 import numpy as np
 from scipy.stats import norm
 import xarray as xr
-
-# CPC
-import cpc.geogrids
+import matplotlib.pyplot as plt
 
 # This application
 from .plot_poe_charts import plot_debug_poe
@@ -199,10 +197,9 @@ def ensemble_regression(raw_fcst: Union[xr.Dataset, xr.DataArray],
                 levels = levels_dict[variable][stat]
             except KeyError:
                 levels = 'auto'
-            with Geomap() as geomap:
-                geofield = Geofield(locals()[stat], geogrid, levels=levels)
-                geomap.plot(geofield)
-                geomap.save('{}.png'.format(stat), dpi=200)
+            locals()[stat].plot()
+            plt.savefig(f'{stat}.png', dpi=200)
+            plt.close()
 
     if debug_poe_latlon:
         plot_debug_poe(raw_fcst, POE_ens_mean, debug_poe_latlon, geogrid, climo=climo,
