@@ -148,15 +148,14 @@ def ensemble_regression(raw_fcst: Union[xr.Dataset, xr.DataArray],
     poe_ens = y_anom.expand_dims({'norm_ptile': norm_ptiles}).copy(deep=True) * np.nan
 
     for norm_ptile in norm_ptiles:
-        poe_ens.loc[dict(norm_ptile=norm_ptile)] = xr.apply_ufunc(norm.cdf, norm_ptile,
-                                                                  a1 * y_anom / np.sqrt(xv),
-                                                                  ebest / np.sqrt(xv))
+        poe_ens.loc[dict(norm_ptile=norm_ptile)] = 1 - xr.apply_ufunc(norm.cdf, norm_ptile,
+                                                                      a1 * y_anom / np.sqrt(xv),
+                                                                      ebest / np.sqrt(xv))
     poe_ens_mean = (
         poe_ens.mean(dim='member')                    # Create ensemble mean
         .rename('poe')                                # Give the DataArray a name of 'poe'
         .rename({'norm_ptile': 'ptile'})              # Rename norm_ptile coordinate to ptile
-        .assign_coords(ptile=list(reversed(ptiles)))  # Insert real ptile values (99-1)
-        .sortby('ptile', ascending=True)              # Sort ptiles as ascending
+        .assign_coords(ptile=ptiles)                  # Insert real ptile values (99-1)
     )
 
     # ----------------------------------------------------------------------------------------------
