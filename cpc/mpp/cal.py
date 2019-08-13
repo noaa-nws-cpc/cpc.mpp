@@ -1,5 +1,7 @@
 # Built-in
 from typing import Union, Optional
+import warnings
+import logging
 
 # Third-party
 import numpy as np
@@ -10,6 +12,9 @@ import matplotlib.pyplot as plt
 # This application
 from .plot_poe_charts import plot_debug_poe
 import mpp_driver.data.common
+
+
+logging.getLogger('matplotlib').setLevel(logging.WARNING)
 
 
 class StatsError(Exception):
@@ -134,9 +139,11 @@ def ensemble_regression(raw_fcst: Union[xr.Dataset, xr.DataArray],
     # ----------------------------------------------------------------------------------------------
     # Calculate regression coefficient and error of best member
     #
-    a1 = rxy * np.sqrt(xv / yv)
-    ebest = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2 * (1 + k**2 * es/yv)))
-    emean = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2))
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', category=RuntimeWarning)
+        a1 = rxy * np.sqrt(xv / yv)
+        ebest = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2 * (1 + k**2 * es/yv)))
+        emean = np.sqrt(num_years / (num_years - 2) * xv * (1 - rxy**2))
     # Set lower bound for ebest - if ebest is zero, then the scale parameter in norm.cdf will be
     # zero, resulting in the cdf being NaN - set to a very small number instead of zero
     ebest = ebest.where(ebest > 0, 0.00001)
