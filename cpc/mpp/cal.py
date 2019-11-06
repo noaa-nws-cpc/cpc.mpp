@@ -37,7 +37,7 @@ def ensemble_regression(raw_fcst: Union[xr.Dataset, xr.DataArray],
     # Make sure raw_fcst (stats) is an xarray.DataArray (xarray.Dataset) without a date (model)
     # dimension
     raw_fcst = mpp_driver.data.common.to_dataarray(raw_fcst).drop('model').squeeze()
-    stats = mpp_driver.data.common.to_dataset(stats).drop('date').squeeze()
+    stats = mpp_driver.data.common.to_dataset(stats).drop('date', errors='ignore').squeeze()
     # Make sure the forecast only contains a single model
     try:
         if len(raw_fcst.model) > 1:
@@ -153,11 +153,13 @@ def ensemble_regression(raw_fcst: Union[xr.Dataset, xr.DataArray],
     #
     norm_ptiles = norm.ppf(np.array(ptiles) / 100)
     poe_ens = y_anom.expand_dims({'norm_ptile': norm_ptiles}).copy(deep=True) * np.nan
-
+    # Loop over normalized ptiles
     for norm_ptile in norm_ptiles:
-        poe_ens.loc[dict(norm_ptile=norm_ptile)] = 1 - xr.apply_ufunc(norm.cdf, norm_ptile,
-                                                                      a1 * y_anom / np.sqrt(xv),
-                                                                      ebest / np.sqrt(xv))
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', category=RuntimeWarning)
+            poe_ens.load().loc[dict(norm_ptile=norm_ptile)] = 1 - xr.apply_ufunc(
+                norm.cdf, norm_ptile, a1.compute() * y_anom.compute() / np.sqrt(xv.compute()),
+                ebest.compute() / np.sqrt(xv.compute()))
     poe_ens_mean = (
         poe_ens.mean(dim='member')                    # Create ensemble mean
         .rename('poe')                                # Give the DataArray a name of 'poe'

@@ -23,7 +23,7 @@ requirements = [
 
 setup(
     name="cpc.mpp",
-    version='v0.3',
+    version='v0.3.1',
     description="Model post processing package",
     long_description=readme + '\n\n' + history,
     author="Mike Charles",
